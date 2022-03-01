@@ -224,3 +224,4 @@ CALL bd_sample.SP_PROCESAR_FACTURA(
 );
 select *from bd_sample.tbl_items_factura;
 select * from bd_sample.tbl_facturas;
+
