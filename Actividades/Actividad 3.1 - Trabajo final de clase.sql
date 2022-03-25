@@ -111,70 +111,52 @@ end //
 El proceso debe permitir que se registre los datos de un suscriptor. 
 Al momento de registrarlo, se le debe asignar el ciclo de facturación con el día calendario más cercano al día calendario de la inscripción más 20 días.*/
 
-drop procedure bd_platvideo.SP_NUEVO_SUB;
+DROP PROCEDURE IF EXISTS SP_Crear_Suscriptor;
+
 delimiter //
 CREATE PROCEDURE SP_Crear_Suscriptor (
-	IN p_id_suscriptor int,
-	IN p_nombres varchar(45),
-	IN p_apellidos varchar(45),
-	IN p_telefono varchar(45),
-	IN p_email varchar(45),
-	IN p_usuario varchar(45),
-	IN p_contrasena varchar(400),
-	IN p_fechanacimiento datetime,
-	IN p_edad int,
-	IN p_fecha_ingreso datetime,
-	IN p_fecha_modificacion datetime,
-	IN p_fecha_ultima_act datetime
-	#IN p_idciclo int
+	in p_id_suscriptor int,
+	in p_nombres varchar(45),
+	in p_apellidos varchar(45),
+	in p_telefono varchar(45),
+	in p_email varchar(45),
+	in p_usuario varchar(45),
+	in p_contrasena varchar(400),
+	in p_fechanacimiento datetime,
+	in p_edad int,
+	in p_fecha_ingreso datetime,
+	in p_fecha_modificacion datetime,
+	in p_fecha_ultima_act datetime
+
 )
 BEGIN
-DECLARE Dia_Ingreso int;
-DECLARE Ultimo_Dia int;
-DECLARE ciclo int;
-DECLARE ID_Ciclo int;
+declare Dia_Ingreso int;
+declare Ultimo_Dia int;
+declare ciclo int;
+declare ID_Ciclo int;
 
-SET Dia_Ingreso = DAY(p_fecha_ingreso);
-SET Ultimo_Dia = DAY(LAST_DAY(NOW())); 
-SET ciclo = (Dia_Ingreso + 20) - Ultimo_Dia;
+set Dia_Ingreso = day(p_fecha_ingreso);
+set Ultimo_Dia = day(LAST_DAY(NOW())); 
+set ciclo = (Dia_Ingreso + 20) - Ultimo_Dia;
 
 
-IF (Dia_Ingreso + 20) > Ultimo_Dia THEN 
-SET ID_Ciclo = (
-SELECT idciclo  
-FROM tbl_ciclos_facturacion 
-WHERE  idciclo = (
-SELECT MIN(idciclo) # tomando el primer registro de la misma tabla
-FROM tbl_ciclos_facturacion
-WHERE dia_calendario >= ciclo)
-        
-	);
+if (Dia_Ingreso + 20) > Ultimo_Dia then 
+set ID_Ciclo = (select idciclo  from tbl_ciclos_facturacion where  idciclo = (select MIN(idciclo) from tbl_ciclos_facturacion where dia_calendario >= ciclo));
 END IF;
 
 /*Rango*/
 
-IF (Dia_Ingreso + 20) < Ultimo_Dia THEN
-SET ID_Ciclo = (
-	SELECT idciclo  
-	FROM tbl_ciclos_facturacion 
-	WHERE  idciclo = (
-	SELECT MIN(idciclo) 
-    FROM tbl_ciclos_facturacion
-    WHERE dia_calendario >= (Dia_Ingreso + 20))  
+if (Dia_Ingreso + 20) < Ultimo_Dia then
+set ID_Ciclo = (select idciclo  from tbl_ciclos_facturacion where  idciclo = (select MIN(idciclo) from tbl_ciclos_facturacion where dia_calendario >= (Dia_Ingreso + 20))  
 	);
 
-END IF;
+end if;
 
 /*Ingreso de suscriptor*/
 
 	INSERT tbl_suscriptores
-	(
-	id_suscriptor,nombres,apellidos,telefono,email,usuario,contrasena,fechanacimiento,edad,fecha_inrgreso ,fecha_modificacion,fecha_ultima_act,idciclo	
-	)
-	VALUES
-	(
-	p_id_suscriptor,p_nombres,p_apellidos,p_telefono,p_email,p_usuario,p_contrasena,p_fechanacimiento, p_edad,p_fecha_ingreso,p_fecha_modificacion,p_fecha_ultima_act,ID_Ciclo 
-	);
+	(id_suscriptor,nombres,apellidos,telefono,email,usuario,contrasena,fechanacimiento,edad,fecha_inrgreso ,fecha_modificacion,fecha_ultima_act,idciclo	)
+	VALUES(p_id_suscriptor,p_nombres,p_apellidos,p_telefono,p_email,p_usuario,p_contrasena,p_fechanacimiento, p_edad,p_fecha_ingreso,p_fecha_modificacion,p_fecha_ultima_act,ID_Ciclo );
 commit;
 END;
 
